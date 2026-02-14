@@ -1,0 +1,21 @@
+# Backend database (Redis) for response cache and conversation memory.
+# Start with: docker compose up -d
+# Stop with:  docker compose down
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: team-activity-monitor-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  redis_data:
