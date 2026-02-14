@@ -29,10 +29,11 @@ def create_app():
 
     return app
 
+
+# App instance for Gunicorn (and other WSGI servers): app.main:app
+app = create_app()
+
 if __name__ == "__main__":
-    import os
-    app = create_app()
     port = int(os.getenv("PORT", "5000"))
     debug = os.getenv("FLASK_DEBUG", "false").lower() in ("1", "true", "yes")
-    # 0.0.0.0 so the app is reachable when deployed (e.g. Railway, Render)
     app.run(host="0.0.0.0", port=port, debug=debug)
