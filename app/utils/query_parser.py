@@ -49,6 +49,19 @@ ALL_USERS_PHRASES = [
     r"\beverybody\b",
     r"\beveryone'?s?\b",
     r"\beverybody'?s?\b",
+    # "The team" / team activities / casual phrasings
+    r"\bthe\s+team\b",
+    r"\bteam\s+doing\b",
+    r"\bteam\s+activit",
+    r"\bwhat(?:'s|s|\s+is)\s+the\s+team\b",
+    r"\bwhat\s+the\s+team\b",
+    r"\bteam\s*,?\s*what\b",
+    r"\bwhat\s+they\s+doin",
+    r"\bhow'?s\s+the\s+team\b",
+    r"\bteam\s+work\b",
+    r"\bteam\s+status\b",
+    r"\bteam\s+up\s+to\b",
+    r"\bwhat'?s\s+the\s+team\b",
 ]
 
 

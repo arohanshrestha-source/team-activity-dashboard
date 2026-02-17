@@ -58,11 +58,20 @@ def detect_intent(question: str) -> Intent:
     github_words = ["github", "git hub", "pull request", "prs", "commits", "repos", "repositories"]
     jira_words = ["jira", "jira ticket", "jira issue", "ticket", "assigned to"]
     # Specific phrases that indicate team/work questions (not broad ones like "what is")
-    team_phrases = ["working on", "activity", "these days", "up to"]
+    team_phrases = ["working on", "activity", "these days", "up to", "doing", "work", "status"]
+
+    # "The team" / team activities / casual: "what is the team doing?", "team activities", "team, what they doin?"
+    team_activity_phrases = [
+        "the team doing", "team doing", "team activities", "team activity",
+        "what the team", "what's the team", "what is the team", "how's the team",
+        "team work", "team status", "team up to", "team , what", "team, what",
+        "what they doin", "what they doing", "team what they",
+    ]
 
     has_github = any(w in q for w in github_words)
     has_jira = any(w in q for w in jira_words)
     has_team_phrase = any(w in q for w in team_phrases)
+    has_team_activity_phrase = any(p in q for p in team_activity_phrases)
     has_known_person = extract_person_key(question) is not None
 
     # GitHub only: mentions github/prs/commits but NOT jira
@@ -73,8 +82,8 @@ def detect_intent(question: str) -> Intent:
     if has_jira and not has_github:
         return "jira_only"
 
-    # Team activity: explicit work phrases, OR known person mentioned, OR both github+jira
-    if has_team_phrase or has_known_person or (has_github and has_jira):
+    # Team activity: explicit work phrases, "the team" / team activities, known person, or both github+jira
+    if has_team_phrase or has_team_activity_phrase or has_known_person or (has_github and has_jira):
         return "team_activity"
 
     # Default: general chat (could be weather, small talk, etc.)

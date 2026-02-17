@@ -8,11 +8,25 @@ def _jira_headers() -> Dict[str, str]:
         "Accept": "application/json",
     }
 
+
+def _check_jira_config():
+    """Raise a clear error if JIRA is not configured (e.g. missing env vars on Railway)."""
+    s = get_settings()
+    base = (s.jira_base_url or "").strip()
+    if not base or not base.startswith(("http://", "https://")):
+        raise RuntimeError(
+            "JIRA_BASE_URL is not set or invalid. "
+            "On Railway: set it in your service Variables. "
+            "Locally: add JIRA_BASE_URL=https://your-domain.atlassian.net to .env"
+        )
+
+
 def get_issue_by_key(issue_key: str) -> Optional[Dict[str, Any]]:
     """
     Fetch a single JIRA issue by key (e.g. SAM1-8, KAN-2).
     Returns normalized dict with key, summary, status, project, description, url, assignee; or None if not found.
     """
+    _check_jira_config()
     s = get_settings()
     url = f"{s.jira_base_url.rstrip('/')}/rest/api/3/issue/{issue_key}"
     params = {"fields": "summary,status,project,description,assignee,updated,created"}
@@ -72,6 +86,7 @@ def get_issue_by_key(issue_key: str) -> Optional[Dict[str, Any]]:
 
 
 def get_assigned_issues(assignee_email: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    _check_jira_config()
     s = get_settings()
 
     # NEW endpoint (old /search is removed)
