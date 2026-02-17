@@ -3,10 +3,10 @@ Detects user intent from the question so the chatbot can respond appropriately.
 """
 from typing import Literal
 
-from app.utils.query_parser import extract_person_key, extract_jira_issue_key
+from app.utils.query_parser import extract_person_key, extract_jira_issue_key, extract_github_pr_ref
 
 Intent = Literal[
-    "weather", "date", "team_directory", "jira_issue_lookup",
+    "weather", "date", "team_directory", "jira_issue_lookup", "github_pr_lookup",
     "github_only", "jira_only", "team_activity", "general_chat",
 ]
 
@@ -54,6 +54,19 @@ def detect_intent(question: str) -> Intent:
     issue_key = extract_jira_issue_key(question)
     if issue_key and any(p in q for p in issue_lookup_phrases):
         return "jira_issue_lookup"
+
+    # GitHub PR lookup: "details about PR #5 in owner/repo", "tell me about this pull request", URL
+    pr_lookup_phrases = [
+        "details about", "details for", "tell me about", "tell me more about",
+        "what is ", "what's ", "info on ", "information on ", "describe ", "explain ",
+        "show me ", "get details", "open pull request", "this pull request", "this pr",
+    ]
+    pr_ref = extract_github_pr_ref(question)
+    if pr_ref and any(p in q for p in pr_lookup_phrases):
+        return "github_pr_lookup"
+    # Also if question contains a PR URL or owner/repo#123 and "pull request" or "pr"
+    if pr_ref and ("pull request" in q or " pr " in q or " pr#" in q or q.strip().endswith(" pr")):
+        return "github_pr_lookup"
 
     github_words = ["github", "git hub", "pull request", "prs", "commits", "repos", "repositories"]
     jira_words = ["jira", "jira ticket", "jira issue", "ticket", "assigned to"]

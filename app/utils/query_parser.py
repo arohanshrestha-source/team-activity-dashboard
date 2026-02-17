@@ -31,6 +31,45 @@ def extract_jira_issue_key(question: str) -> Optional[str]:
     return f"{parts[0]}-{parts[1]}" if len(parts) == 2 else key.upper()
 
 
+# GitHub PR: URL (github.com/owner/repo/pull/123) or owner/repo#123 or "PR #5 in owner/repo"
+GITHUB_PR_URL = re.compile(
+    r"(?:https?://)?(?:www\.)?github\.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)/pull/(\d+)",
+    re.IGNORECASE,
+)
+GITHUB_PR_REPO_HASH = re.compile(r"\b([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)#(\d+)\b")
+GITHUB_PR_NUM_IN_REPO = re.compile(
+    r"(?:PR|pull\s+request)\s*#?\s*(\d+)\s+(?:in\s+)?([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)",
+    re.IGNORECASE,
+)
+GITHUB_PR_REPO_NUM = re.compile(
+    r"\b([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)\s+(?:PR|pull\s+request)\s*#?\s*(\d+)\b",
+    re.IGNORECASE,
+)
+
+
+def extract_github_pr_ref(question: str) -> Optional[Tuple[str, str, int]]:
+    """
+    Find a GitHub PR reference in the question.
+    Returns (owner, repo, pr_number) or None.
+    Supports: github.com/owner/repo/pull/123, owner/repo#123, PR #5 in owner/repo, owner/repo PR 5.
+    """
+    q = question.strip()
+    # URL first
+    m = GITHUB_PR_URL.search(q)
+    if m:
+        return (m.group(1), m.group(2), int(m.group(3)))
+    m = GITHUB_PR_REPO_HASH.search(q)
+    if m:
+        return (m.group(1), m.group(2), int(m.group(3)))
+    m = GITHUB_PR_NUM_IN_REPO.search(q)
+    if m:
+        return (m.group(2), m.group(3), int(m.group(1)))
+    m = GITHUB_PR_REPO_NUM.search(q)
+    if m:
+        return (m.group(1), m.group(2), int(m.group(3)))
+    return None
+
+
 def extract_person_key(question: str) -> Optional[str]:
     """
     Find a known person key (from USER_DIRECTORY) mentioned in the question.

@@ -1,9 +1,11 @@
+import re
 import requests
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from app.config import get_settings
 
 GITHUB_API = "https://api.github.com"
+
 
 def _gh_headers() -> Dict[str, str]:
     s = get_settings()
@@ -13,6 +15,41 @@ def _gh_headers() -> Dict[str, str]:
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "team-activity-monitor",
     }
+
+def get_pull_request(owner: str, repo: str, pull_number: int) -> Optional[Dict[str, Any]]:
+    """
+    Fetch a single pull request by owner, repo, and PR number.
+    Returns normalized dict with title, body, state, user, url, branches, etc.; or None if not found.
+    """
+    url = f"{GITHUB_API}/repos/{owner}/{repo}/pulls/{pull_number}"
+    try:
+        resp = requests.get(url, headers=_gh_headers(), timeout=15)
+        if resp.status_code == 404:
+            return None
+        if resp.status_code >= 400:
+            raise RuntimeError(f"GitHub PR request failed ({resp.status_code}): {resp.text}")
+        data = resp.json()
+    except requests.RequestException as e:
+        raise RuntimeError(f"GitHub request failed: {e}") from e
+
+    user = data.get("user") or {}
+    return {
+        "number": data.get("number"),
+        "title": data.get("title"),
+        "body": (data.get("body") or "").strip(),
+        "state": data.get("state"),
+        "author": user.get("login"),
+        "author_url": user.get("html_url"),
+        "created_at": data.get("created_at"),
+        "updated_at": data.get("updated_at"),
+        "merged_at": data.get("merged_at"),
+        "html_url": data.get("html_url"),
+        "head_ref": (data.get("head") or {}).get("ref"),
+        "base_ref": (data.get("base") or {}).get("ref"),
+        "draft": data.get("draft", False),
+        "mergeable": data.get("mergeable"),
+    }
+
 
 def get_recent_commits_from_events(username: str, max_events: int = 30) -> List[Dict[str, Any]]:
     """

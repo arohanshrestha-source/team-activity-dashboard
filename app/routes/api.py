@@ -4,9 +4,10 @@ from flask import Blueprint, jsonify, request, current_app
 
 from app.config import get_settings
 from app.services.jira_client import get_assigned_issues, get_issue_by_key
-from app.services.github_client import get_github_activity_summary
+from app.services.github_client import get_github_activity_summary, get_pull_request
 from app.utils.query_parser import (
     USER_DIRECTORY,
+    extract_github_pr_ref,
     extract_jira_issue_key,
     extract_mentioned_unknown_person,
     extract_person_keys,
@@ -218,6 +219,55 @@ def ask():
         if url:
             answer_md += f"[Open in JIRA]({url})"
         links = [{"url": url, "label": f"View {issue_key} in JIRA"}] if url else []
+        return jsonify({
+            "answer_md": answer_md,
+            "used_ai": False,
+            "links": links,
+        })
+
+    # GitHub PR lookup: "details about PR #5 in owner/repo", "tell me about this pull request", or URL
+    if intent == "github_pr_lookup":
+        pr_ref = extract_github_pr_ref(question)
+        if not pr_ref:
+            return jsonify({"error": "No GitHub pull request found in question. Use a URL or e.g. PR #5 in owner/repo"}), 400
+        owner, repo, pr_number = pr_ref
+        try:
+            pr = get_pull_request(owner, repo, pr_number)
+        except Exception as e:
+            return jsonify({"error": f"GitHub failed: {str(e)}"}), 502
+        if not pr:
+            return jsonify({
+                "error": f"Pull request **{owner}/{repo}#{pr_number}** not found.",
+                "hint": "Check the repo and PR number, and that your token has access.",
+            }), 404
+        title = pr.get("title") or "—"
+        state = pr.get("state") or "—"
+        author = pr.get("author") or "—"
+        author_url = pr.get("author_url") or ""
+        body = (pr.get("body") or "").strip()
+        head_ref = pr.get("head_ref") or "—"
+        base_ref = pr.get("base_ref") or "—"
+        draft = pr.get("draft", False)
+        created = pr.get("created_at") or ""
+        updated = pr.get("updated_at") or ""
+        html_url = pr.get("html_url") or ""
+        body_preview = (body[:500] + "…") if len(body) > 500 else body
+        answer_md = (
+            f"# Pull request #{pr_number}: {title}\n\n"
+            f"**Repo:** {owner}/{repo}\n\n"
+            f"**State:** {state}" + (" (draft)" if draft else "") + "\n\n"
+            f"**Author:** {author}\n\n"
+            f"**Branch:** `{head_ref}` → `{base_ref}`\n\n"
+        )
+        if created:
+            answer_md += f"**Created:** {created}\n\n"
+        if updated and updated != created:
+            answer_md += f"**Updated:** {updated}\n\n"
+        if body_preview:
+            answer_md += f"**Description:**\n\n{body_preview}\n\n"
+        if html_url:
+            answer_md += f"[Open on GitHub]({html_url})"
+        links = [{"url": html_url, "label": f"View PR #{pr_number} on GitHub"}] if html_url else []
         return jsonify({
             "answer_md": answer_md,
             "used_ai": False,
