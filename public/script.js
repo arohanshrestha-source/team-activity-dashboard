@@ -23,9 +23,48 @@ function mdToHtml(md) {
   return (md || "").replace(/</g, "&lt;");
 }
 
+function getWelcomeHtml() {
+  return `
+    <div class="welcome">
+      <p class="intro">Ask anything below. You can ask about team activity, JIRA issues, GitHub PRs, weather, or general questions.</p>
+      <div class="category">
+        <h2>Team &amp; activity</h2>
+        <ul>
+          <li><strong>What is [name] working on?</strong> — One person's JIRA + GitHub</li>
+          <li><strong>What is the team doing?</strong> / <strong>Team activities</strong> — Everyone's activity</li>
+          <li><strong>Who are all the users?</strong> — List of team members</li>
+          <li><strong>What about Mike?</strong> / <strong>and Sarah?</strong> — Follow-up after a previous question</li>
+        </ul>
+      </div>
+      <div class="category">
+        <h2>JIRA</h2>
+        <ul>
+          <li><strong>What is SAM1-8?</strong> / <strong>Tell me about KAN-2</strong> — Details for a specific issue</li>
+          <li><strong>What JIRA tickets is [name] on?</strong> — Someone's assigned issues</li>
+        </ul>
+      </div>
+      <div class="category">
+        <h2>GitHub</h2>
+        <ul>
+          <li><strong>Details about PR #5 in owner/repo</strong> — Or paste a GitHub PR URL</li>
+          <li><strong>Show me [name]'s GitHub activity</strong> — PRs, commits, repos</li>
+        </ul>
+      </div>
+      <div class="category">
+        <h2>Other</h2>
+        <ul>
+          <li><strong>Weather in Austin</strong> / <strong>Forecast for Paris</strong></li>
+          <li><strong>What's the date?</strong> / <strong>What time is it?</strong></li>
+          <li>General chat — e.g. <strong>My friend's name is Jeff</strong> → <strong>What is my friend's name?</strong></li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
 function renderMessages() {
   if (messages.length === 0) {
-    chatEl.innerHTML = '<div class="welcome">Ask a question like “What is Arohan working on?” or “What is SAM1-8?”</div>';
+    chatEl.innerHTML = getWelcomeHtml();
     return;
   }
   chatEl.innerHTML = messages
