@@ -147,16 +147,20 @@ def ai_generate_general_answer(
 ) -> str:
     """
     Handles general chat and other non-team-activity questions.
-    Uses conversation_history for follow-ups (e.g. "my friend is Jeff" then
-    "what is my friend's name?").
+    Uses conversation_history for follow-ups; only facts stated in that history
+    should be used when answering.
     """
     client = _get_client()
     system = (
         "You are a helpful, friendly chatbot. Answer the user's question "
-        "conversationally. Be concise. Use markdown if it helps readability. "
-        "Use information from earlier in the conversation when the user asks "
-        "follow-up questions (e.g. if they said 'my friend is Jeff' and now ask "
-        "'what is my friend's name?', answer 'Jeff')."
+        "conversationally. Be concise. Use markdown if it helps readability.\n\n"
+        "CRITICAL: You will receive a list of previous messages in this chat. "
+        "Use ONLY information that was explicitly stated in those previous messages. "
+        "Do NOT invent, assume, or guess facts (e.g. names, numbers) that do not "
+        "appear in the conversation history. If the user asks about something that "
+        "was never said in this conversation (e.g. 'what is my friend's name?' when "
+        "they never told you a name), say you don't have that information or ask "
+        "them to tell you."
     )
 
     messages = [{"role": "system", "content": system}]
