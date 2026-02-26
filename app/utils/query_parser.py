@@ -45,13 +45,18 @@ GITHUB_PR_REPO_NUM = re.compile(
     r"\b([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)\s+(?:PR|pull\s+request)\s*#?\s*(\d+)\b",
     re.IGNORECASE,
 )
+# "in owner/repo what is PR#1", "in octocat/Hello-World PR 1"
+GITHUB_PR_IN_REPO = re.compile(
+    r"\bin\s+([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)\s*(?:,?\s*(?:what\s+is|what's|tell\s+me\s+about|details\s+about|info\s+on)\s+)?(?:PR|pull\s+request)\s*#?\s*(\d+)",
+    re.IGNORECASE,
+)
 
 
 def extract_github_pr_ref(question: str) -> Optional[Tuple[str, str, int]]:
     """
     Find a GitHub PR reference in the question.
     Returns (owner, repo, pr_number) or None.
-    Supports: github.com/owner/repo/pull/123, owner/repo#123, PR #5 in owner/repo, owner/repo PR 5.
+    Supports: URL, owner/repo#123, PR #5 in owner/repo, in owner/repo what is PR#1, owner/repo PR 5.
     """
     q = question.strip()
     # URL first
@@ -65,6 +70,9 @@ def extract_github_pr_ref(question: str) -> Optional[Tuple[str, str, int]]:
     if m:
         return (m.group(2), m.group(3), int(m.group(1)))
     m = GITHUB_PR_REPO_NUM.search(q)
+    if m:
+        return (m.group(1), m.group(2), int(m.group(3)))
+    m = GITHUB_PR_IN_REPO.search(q)
     if m:
         return (m.group(1), m.group(2), int(m.group(3)))
     return None
