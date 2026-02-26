@@ -63,23 +63,28 @@ function getWelcomeHtml() {
 }
 
 function renderMessages() {
-  if (messages.length === 0) {
-    chatEl.innerHTML = getWelcomeHtml();
-    return;
-  }
-  chatEl.innerHTML = messages
+  const welcomeHtml = getWelcomeHtml();
+  const messagesHtml = messages
     .map((m) => {
       const isThinking = m.role === "assistant" && m.content === "**Thinking...**";
       const bubbleClass = isThinking ? "message-bubble message-thinking" : "message-bubble";
       const htmlContent = mdToHtml(m.content);
       const linksHtml =
         m.links && m.links.length > 0
-          ? `<div class="message-links">${m.links.map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label || l.url}</a>`).join("")}</div>`
+          ? `<div class="message-links">${m.links
+              .map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label || l.url}</a>`)
+              .join("")}</div>`
           : "";
       return `<div class="message ${m.role} ${isThinking ? "thinking" : ""}"><div class="${bubbleClass}">${htmlContent}${linksHtml}</div></div>`;
     })
     .join("");
-  scrollToBottom();
+
+  // Always keep welcome/instructions at the top
+  chatEl.innerHTML = welcomeHtml + messagesHtml;
+
+  if (messages.length > 0) {
+    scrollToBottom();
+  }
 }
 
 function scrollToBottom() {
@@ -152,3 +157,6 @@ qEl.addEventListener("keydown", (e) => {
     ask();
   }
 });
+
+// Show welcome message when page loads (messages array is empty)
+renderMessages();

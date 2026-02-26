@@ -62,10 +62,8 @@ def detect_intent(question: str) -> Intent:
         "show me ", "get details", "open pull request", "this pull request", "this pr",
     ]
     pr_ref = extract_github_pr_ref(question)
-    if pr_ref and any(p in q for p in pr_lookup_phrases):
-        return "github_pr_lookup"
-    # Also if question contains a PR URL or owner/repo#123 and "pull request" or "pr"
-    if pr_ref and ("pull request" in q or " pr " in q or " pr#" in q or q.strip().endswith(" pr")):
+    # If we can parse a PR reference, treat this as PR lookup for most PR-shaped questions.
+    if pr_ref and (any(p in q for p in pr_lookup_phrases) or ("pull request" in q) or ("pr" in q)):
         return "github_pr_lookup"
 
     github_words = ["github", "git hub", "pull request", "prs", "commits", "repos", "repositories"]

@@ -36,9 +36,9 @@ GITHUB_PR_URL = re.compile(
     r"(?:https?://)?(?:www\.)?github\.com/([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)/pull/(\d+)",
     re.IGNORECASE,
 )
-GITHUB_PR_REPO_HASH = re.compile(r"\b([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)#(\d+)\b")
+GITHUB_PR_REPO_HASH = re.compile(r"\b([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)#(\d+)\b", re.IGNORECASE)
 GITHUB_PR_NUM_IN_REPO = re.compile(
-    r"(?:PR|pull\s+request)\s*#?\s*(\d+)\s+(?:in\s+)?([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)",
+    r"(?:PR|pull\s+request)\s*#?\s*(\d+)\s+(?:(?:in|for|of|on)\s+)?(?:[a-zA-Z0-9_.-]+['’]s\s+)?([a-zA-Z0-9_.-]+)/([a-zA-Z0-9_.-]+)",
     re.IGNORECASE,
 )
 GITHUB_PR_REPO_NUM = re.compile(
